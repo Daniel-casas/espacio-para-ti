@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Un espacio para ti</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #faf9f7; --surface: #f2f0ec; --border: #e0ddd7;
+      --text-primary: #1a1a1a; --text-secondary: #6b6760; --text-muted: #a09d98;
+      --accent: #3d6b5e; --accent-light: #e8f4f0;
+      --radius-md: 10px; --radius-lg: 16px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141412; --surface: #1e1d1b; --border: #2e2c29;
+        --text-primary: #f0ede8; --text-secondary: #9a9792; --text-muted: #5a5854;
+        --accent: #4d8a7a; --accent-light: #1a2e2a;
+      }
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text-primary); font-family: 'DM Sans', sans-serif; }
+    body { display: flex; justify-content: center; align-items: flex-start; padding: 2rem 1rem; min-height: 100vh; }
+    #app { width: 100%; max-width: 560px; display: flex; flex-direction: column; min-height: calc(100vh - 4rem); }
+    #setup-screen { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 1.5rem; }
+    #setup-screen h1 { font-family: 'Lora', serif; font-size: 26px; font-weight: 400; color: var(--text-primary); }
+    #setup-screen p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+    #setup-screen a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+    #api-input { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); color: var(--text-primary); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; }
+    #api-input:focus { border-color: var(--accent); }
+    #api-input::placeholder { color: var(--text-muted); }
+    #start-btn { width: 100%; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-md); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
+    #start-btn:hover { opacity: 0.88; }
+    #start-btn:disabled { opacity: 0.4; cursor: default; }
+    #setup-error { font-size: 13px; color: #c0392b; display: none; }
+    #chat-screen { flex: 1; display: none; flex-direction: column; }
+    #chat-header { text-align: center; padding: 1.5rem 0 1.2rem; }
+    #chat-header h1 { font-family: 'Lora', serif; font-size: 22px; font-weight: 400; color: var(--text-primary); }
+    #chat-header p { font-size: 13px; color: var(--text-muted); margin-top: 5px; font-weight: 300; }
+    .divider { width: 28px; height: 1px; background: var(--border); margin: 10px auto; }
+    #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 0.5rem 0 1rem; }
+    .msg { max-width: 86%; padding: 11px 15px; font-size: 14px; line-height: 1.65; white-space: pre-wrap; }
+    .msg.assistant { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 2px var(--radius-lg) var(--radius-lg) var(--radius-lg); color: var(--text-primary); }
+    .msg.user { align-self: flex-end; background: var(--accent); color: #e8f4f0; border-radius: var(--radius-lg) 2px var(--radius-lg) var(--radius-lg); }
+    .msg.typing { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 2px var(--radius-lg) var(--radius-lg) var(--radius-lg); color: var(--text-muted); font-style: italic; font-size: 13px; }
+    #input-row { border-top: 1px solid var(--border); padding: 0.85rem 0 0; display: flex; gap: 8px; align-items: flex-end; }
+    #user-input { flex: 1; resize: none; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 10px 14px; font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.5; background: var(--surface); color: var(--text-primary); min-height: 44px; max-height: 120px; outline: none; transition: border-color 0.15s; }
+    #user-input:focus { border-color: var(--accent); }
+    #user-input::placeholder { color: var(--text-muted); }
+    #send-btn { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s, transform 0.1s; }
+    #send-btn:hover { background: var(--border); }
+    #send-btn:active { transform: scale(0.94); }
+    #send-btn:disabled { opacity: 0.35; cursor: default; }
+    #send-btn svg { width: 16px; height: 16px; stroke: var(--text-secondary); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    #disclaimer { text-align: center; font-size: 11px; color: var(--text-muted); padding: 8px 0 0; line-height: 1.5; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="setup-screen">
+    <div>
+      <h1>Un espacio para ti</h1>
+      <div class="divider" style="margin: 14px 0;"></div>
+      <p>Un acompañante emocional basado en terapia cognitivo-conductual (TCC). Sin juicios, a tu ritmo.</p>
+    </div>
+    <div>
+      <p style="margin-bottom: 10px;">Para comenzar, ingresa tu <strong>API key de Anthropic</strong>.<br>
+      Puedes obtenerla en <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys.</p>
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Tu clave se guarda solo en este navegador y nunca se envía a ningún servidor externo.</p>
+      <input type="password" id="api-input" placeholder="sk-ant-..." autocomplete="off" />
+    </div>
+    <div>
+      <button id="start-btn">Entrar a mi espacio</button>
+      <p id="setup-error" style="margin-top: 8px;"></p>
+    </div>
+    <p style="font-size: 11px; color: var(--text-muted);">Este espacio no reemplaza la atención de un profesional de salud mental.</p>
+  </div>
+  <div id="chat-screen">
+    <div id="chat-header">
+      <h1>Un espacio para ti</h1>
+      <div class="divider"></div>
+      <p>Escribe lo que sientes, a tu ritmo. Sin juicios.</p>
+    </div>
+    <div id="messages">
+      <div class="msg assistant">Hola. Me alegra que estés aquí. 💙
+
+Este es tu espacio — puedes escribir lo que sea: algo que te está pesando, un pensamiento que no para de volver, o simplemente cómo te sientes en este momento.
+
+¿Qué está pasando por tu mente hoy?</div>
+    </div>
+    <div id="input-row">
+      <textarea id="user-input" placeholder="Escribe aquí..." rows="1"></textarea>
+      <button id="send-btn">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      </button>
+    </div>
+    <p id="disclaimer">No soy terapeuta. Si estás en crisis, busca apoyo profesional.</p>
+  </div>
+</div>
+<script>
+const SYSTEM = `Actúa como un acompañante emocional basado en principios de terapia cognitivo-conductual (TCC). No eres terapeuta ni profesional de salud mental, y no reemplazas la ayuda profesional.
+
+Tu objetivo es ayudar a la persona a expresar lo que siente libremente, identificar pensamientos negativos o autocríticos, diferenciar pensamientos de hechos, cuestionarlos de manera suave, y proponer formas más realistas de ver la situación. También puedes sugerir pequeñas acciones que puedan mejorar su estado de ánimo.
+
+Tono: Sé cálido, empático y cercano. Valida las emociones antes de hacer preguntas. No juzgues, no minimices, no uses frases vacías como "todo estará bien". Usa lenguaje sencillo y cercano.
+
+Guía la conversación con preguntas como: ¿Qué pasó exactamente? ¿Qué pensaste en ese momento? ¿Cómo te hizo sentir eso? ¿Qué evidencia hay de que ese pensamiento sea totalmente cierto? ¿Hay otra forma de verlo?
+
+Límites: No des diagnósticos clínicos. No digas que eres profesional de salud. No des instrucciones médicas.
+
+Situaciones sensibles: Si la persona expresa pensamientos de hacerse daño, desesperanza extrema o sentirse sin salida, responde con empatía y calma, valida lo que siente, sugiere hablar con alguien de confianza y recomienda buscar ayuda profesional o líneas de apoyo. Nunca la dejes sola emocionalmente en la conversación.
+
+Responde siempre en español. Sé breve y cálido — no hagas más de una o dos preguntas a la vez.`;
+
+let apiKey = '';
+const history = []
